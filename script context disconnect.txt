@@ -1,0 +1,10 @@
+--this is just a simple script to prevent games from logging errors!
+--if your exploit doesn't support getconnections, this script will not work!
+repeat task.wait() until game:IsLoaded()
+task.wait(5)
+repeat
+    for i,v in pairs(getconnections(game:GetService("ScriptContext").Error)) do
+        v:Disable()
+    end
+    task.wait(10)
+until false

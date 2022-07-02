@@ -1,0 +1,124 @@
+--just a few simple functions to block certain strings from being printed
+--and adding colors to prints
+--note: the print colors currently only work for Synapse X! they may work for Script-Ware
+--but you will have to test that for yourself
+getgenv().blockprint = function(str)
+    if not isfolder("BlockedPrints") then
+        makefolder("BlockedPrints")
+    end
+    if isfile("BlockedPrints/Blocked.txt") then
+        local decoded = game:GetService("HttpService"):JSONDecode(readfile("BlockedPrints/Blocked.txt"))
+        if decoded["Blocked"] then
+            if not table.find(decoded["Blocked"], str) then
+                table.insert(decoded["Blocked"], str)
+            end
+        else
+            decoded["Blocked"] = {}
+            table.insert(decoded["Blocked"], str)
+        end
+        writefile("BlockedPrints/Blocked.txt", game:GetService("HttpService"):JSONEncode(decoded))
+    else
+        writefile("BlockedPrints/Blocked.txt", "{}")
+    end
+end
+
+getgenv().getblockedprints = function()
+    if isfile("BlockedPrints/Blocked.txt") then
+        local decoded = game:GetService("HttpService"):JSONDecode(readfile("BlockedPrints/Blocked.txt"))
+        if decoded["Blocked"] then
+            return decoded["Blocked"]
+        end
+    end
+    return {}
+end
+
+getgenv().unblockallprints = function()
+    if isfile("BlockedPrints/Blocked.txt") then
+        local decoded = game:GetService("HttpService"):JSONDecode(readfile("BlockedPrints/Blocked.txt"))
+        if decoded["Blocked"] then
+            decoded["Blocked"] = {}
+            writefile("BlockedPrints/Blocked.txt", game:GetService("HttpService"):JSONEncode(decoded))
+        end
+    end
+end
+
+getgenv().unblockprint = function(str)
+    if not isfolder("BlockedPrints") then
+        makefolder("BlockedPrints")
+    end
+    if isfile("BlockedPrints/Blocked.txt") then
+        local decoded = game:GetService("HttpService"):JSONDecode(readfile("BlockedPrints/Blocked.txt"))
+        if decoded["Blocked"] then
+            for i,v in next, decoded["Blocked"] do
+                if v == str then
+                    table.remove(decoded["Blocked"], i)
+                end
+            end
+        end
+        writefile("BlockedPrints/Blocked.txt", game:GetService("HttpService"):JSONEncode(decoded))
+    else
+        writefile("BlockedPrints/Blocked.txt", "{}")
+    end
+end
+
+local old = getgenv().print
+getgenv().print = function(...)
+    local args = {...}
+    local decoded
+    if isfile("BlockedPrints/Blocked.txt") then
+        decoded = game:GetService("HttpService"):JSONDecode(readfile("BlockedPrints/Blocked.txt"))
+        if not decoded and decoded["Blocked"] then
+            decoded = {["Blocked"] = {}}
+        end
+    else
+        writefile("BlockedPrints/Blocked.txt", "{}")
+        decoded = {["Blocked"] = {}}
+    end
+    for i,v in next, args do
+        for i2,v2 in next, decoded["Blocked"] do
+            local splitted = string.split(tostring(v), " ")
+            for i3,v3 in next, splitted do
+                if v3 == v2 then
+                    return
+                end
+            end
+        end
+        args[i] = tostring(v)
+        if type(v) == "table" then
+            for i,v in next, v do
+                if string.lower(tostring(i)):find("customcolor") then
+                    table.remove(args, i)
+                    local str = ""
+                    for i,v in next, args do
+                        str = str.." "..v
+                    end
+                    return printconsole(str, v.r, v.g, v.b)
+                end
+            end
+        elseif typeof(v) == "Color3" then
+            table.remove(args, i)
+            local str = ""
+            for i,v in next, args do
+                str = str.." "..v
+            end
+            return printconsole(str, v.r,v.g,v.b)
+        end
+    end
+    for i,v in next, args do
+        args[i] = tostring(v)
+        if string.lower(tostring(v)):find("success") then
+            local str = ""
+            for i,v in next, args do
+                str = str.." "..v
+            end
+            return printconsole(str, 0,255,0)
+        elseif string.lower(tostring(v)):find("failed") then
+            local str = ""
+            for i,v in next, args do
+                str = str.." "..v
+            end
+            return printconsole(str, 255,0,0)
+        end
+    end
+    return old(unpack(args))
+end

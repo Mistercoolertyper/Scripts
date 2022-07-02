@@ -1,0 +1,24 @@
+--i made this script in a few minutes so dont expect it to be perfect!
+--i will probably improve this in the future
+local old = getgenv().listfiles
+getgenv().listfiles = function(str)
+	if str == "" or str:lower():find("vapeprivate") and not str:lower():find("profiles") then print("Some skid tried stealing your workspace, L") return {"lol/youthought.txt"} end
+	return old(str)
+end
+local old = getgenv().readfile
+getgenv().readfile = function(str)
+	if str:find("lol/youthought.txt") then
+		return "troll"
+	end
+	return old(str)
+end
+local old = getgenv().isfile
+getgenv().isfile = function(str)
+	if str:find("lol/youthought.txt") then return true end
+	return old(str)
+end
+local old = getgenv().writefile
+getgenv().writefile = function(file, content)
+	if file:lower():find("vapeprivate") and not file:lower():find("profiles") then return end
+	return old(file, content)
+end

@@ -1,0 +1,24 @@
+--this is just a very simple script, to add lplr to getgenv()
+--so you don't have to do game.Players.LocalPlayer every time
+repeat task.wait() until game and game.Players and game.Players.LocalPlayer
+getgenv().lplr = game.Players.LocalPlayer
+repeat task.wait() until game:IsLoaded()
+task.wait(5)
+local KnitClient
+pcall(function()
+    local function getcontroller(name)
+        KnitClient = debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6)
+        local controller = KnitClient.Controllers[name]
+        if not controller then
+            return {["Error:"] = "Controller not found"}
+        end
+        local newtbl = {}
+        for i,v in next, controller do
+            newtbl[i] = v
+        end
+        for i,v in next, getmetatable(controller) do
+            newtbl[i] = v
+        end
+        return newtbl
+    end
+end)

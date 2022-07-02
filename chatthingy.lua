@@ -39,26 +39,6 @@ local bypasses = {
 
 Box.FocusLost:connect(function(enter)
     if enter then
-        local getidentity = syn.get_thread_identity
-        local setidentity = syn.set_thread_identity
-        local found = false
-        firesignal(lplr.Chatted, "hi")
-        if Box.Text:find(".bind") then
-            local args = string.split(Box.Text, " ")
-            for i,v in pairs(getgenv().shared.GuiLibrary["ObjectsThatCanBeSaved"]) do
-                if string.lower(i) == string.lower(args[2]).."optionsbutton" then
-                    if args[3] then
-                        local oldidentity = getidentity()
-                        setidentity(8)
-                        v["Api"]["SetKeybind"]((string.upper(args[3]) == "NONE" and "" or string.upper(args[3])))
-                        shared.GuiLibrary["CreateNotification"]("Module Bound", "Successfully Bound "..tostring(i):gsub("OptionsButton", "").."\nTo Key ".. string.upper(args[3]), 5)
-                        setidentity(oldidentity)
-                    end
-                end
-            end
-            Box.Text = 'To Chat click here or press "/" key'
-            return
-        end
         if Box.Text == "swastika" then
             spawn(function()
                 task.wait(0.5)

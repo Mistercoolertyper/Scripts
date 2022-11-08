@@ -1,5 +1,7 @@
 --< engo's implementation of filtergc into syn v2/other exploits. >--
 
+local is_synapse_function = is_synapse_function or function() return false end
+
 local function table_find(t, v)
     for _, val in next, t do 
         if val == v then 

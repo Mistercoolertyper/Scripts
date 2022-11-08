@@ -2,6 +2,8 @@
 
 local is_synapse_function = is_synapse_function or function() return false end
 
+print("updated")
+
 local function table_find(t, v)
     for _, val in next, t do 
         if val == v then 

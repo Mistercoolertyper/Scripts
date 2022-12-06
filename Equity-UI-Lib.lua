@@ -678,6 +678,14 @@ function lib:Window(text, preset, closebind)
 
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
         end
+
+        function tabcontent.CreateOptionsButton(tab, args)
+            local name = args.Name
+            local func = args.Function
+            local default = args.Default
+            tab:Toggle(name, (default or false), func)
+        end
+
         function tabcontent:Slider(text, min, max, start, callback)
             local dragging = false
             local Slider = Instance.new("TextButton")
@@ -802,6 +810,16 @@ function lib:Window(text, preset, closebind)
             )
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
         end
+
+        function tabcontent.CreateSlider(tab, args)
+            local name = args.Name
+            local min = args.Min
+            local max = args.Max
+            local default = (args.Default or max)
+            local func = args.Function
+            tab:Slider(name, min, max, default, func)
+        end
+
         function tabcontent:Dropdown(text, list, callback)
             local droptog = false
             local framesize = 0

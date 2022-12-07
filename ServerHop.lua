@@ -49,20 +49,20 @@ local function TPReturner(placeId)
 			end
 			if Possible == true then
 				table.insert(AllIDs, ID)
-				wait()
+				task.wait()
 				pcall(function()
 					writefile("server-hop-temp.json", S_H:JSONEncode(AllIDs))
-					wait()
+					task.wait()
 					S_T:TeleportToPlaceInstance(placeId, ID, game.Players.LocalPlayer)
 				end)
-				wait(4)
+				task.wait(4)
 			end
 		end
 	end
 end
 local module = {}
 function module:Teleport(placeId)
-	while wait() do
+	while task.wait() do
 		pcall(function()
 			TPReturner(placeId)
 			if foundAnything ~= "" then

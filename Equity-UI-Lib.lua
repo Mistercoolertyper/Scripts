@@ -6,15 +6,77 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local PresetColor = Color3.fromRGB(44, 120, 224)
 local CloseBind = Enum.KeyCode.RightControl
+local mods = {}
 
 local ui = Instance.new("ScreenGui")
 ui.Name = "ui"
 ui.Parent = game.CoreGui
 ui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+local function checkFolder(path)
+    if not isfolder(path) then makefolder(path) end
+end
+
+local function checkFile(path)
+    if not isfile(path) then writefile(path, "") end
+end
+
+checkFolder("Equity")
+checkFolder("Equity/Configs")
+checkFolder("Equity/Configs/"..tostring(game.PlaceId))
+checkFile("Equity/Configs/"..tostring(game.PlaceId).."/"..game.PlaceId..".json")
+
+--text.."TabName:"..tabcontent.Name.."Type:".."Dropdown"
+
+local function saveSettings()
+    local saveTbl = {}
+    for i,v in next, mods do
+        if v.Type == "Slider" then
+            saveTbl[i] = {Type = "Slider", Value = v.Obj.getValue()}
+        end
+        if v.Type == "Toggle" then
+            saveTbl[i] = {Type = "Toggle", Value = v.Obj.isToggled()}
+        end
+        if v.Type == "Dropdown" then
+            saveTbl[i] = {Type = "Dropdown", Value = v.Obj.getValue()}
+        end
+    end
+    writefile("Equity/Configs/"..tostring(game.PlaceId).."/"..game.PlaceId..".json", game.HttpService:JSONEncode(saveTbl))
+end
+
+local function loadSettings()
+    local suc,res = pcall(function()
+        return game.HttpService:JSONDecode(readfile("Equity/Configs/"..tostring(game.PlaceId).."/"..game.PlaceId..".json"))
+    end)
+    if not suc then return end
+    for i,v in next, res do
+        if mods[i] then
+            if v.Type == "Slider" then
+                mods[i].Obj.setValue(v.Value)
+            end
+            if v.Type == "Toggle" and v.Value == true and not mods[i].Obj.isToggled() then
+                mods[i].Obj.toggle()
+            end
+            if v.Type == "Dropdown" then
+                pcall(mods[i].Obj.setValue, v.Value)
+            end
+        end
+    end
+end
+
+lib.loadSettings = loadSettings
+lib.saveSettingsStart = function()
+    coroutine.wrap(function()
+        repeat
+            task.wait(5)
+            saveSettings()
+        until false
+    end)()
+end
+
 coroutine.wrap(
     function()
-        while wait() do
+        while task.wait() do
             lib.RainbowColorValue = lib.RainbowColorValue + 1 / 255
             lib.HueSelectionPosition = lib.HueSelectionPosition + 1
 
@@ -83,6 +145,10 @@ local function MakeDraggable(topbarobject, object)
             end
         end
     )
+end
+
+function lib:SetBind(newBind)
+    CloseBind = newBind
 end
 
 function lib:Window(text, preset, closebind)
@@ -194,7 +260,7 @@ function lib:Window(text, preset, closebind)
             TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
             {BackgroundTransparency = 0.7}
         ):Play()
-        wait(0.4)
+        task.wait(0.4)
 
         NotificationFrame.Name = "NotificationFrame"
         NotificationFrame.Parent = NotificationHold
@@ -295,7 +361,7 @@ function lib:Window(text, preset, closebind)
                     true
                 )
 
-                wait(0.4)
+                task.wait(0.4)
 
                 TweenService:Create(
                     NotificationHold,
@@ -303,14 +369,14 @@ function lib:Window(text, preset, closebind)
                     {BackgroundTransparency = 1}
                 ):Play()
 
-                wait(.3)
+                task.wait(.3)
 
                 NotificationHold:Destroy()
             end
         )
     end
     local tabhold = {}
-    function tabhold:Tab(text)
+    function tabhold:Tab(tabName)
         local TabBtn = Instance.new("TextButton")
         local TabTitle = Instance.new("TextLabel")
         local TabBtnIndicator = Instance.new("Frame")
@@ -332,7 +398,7 @@ function lib:Window(text, preset, closebind)
         TabTitle.BackgroundTransparency = 1.000
         TabTitle.Size = UDim2.new(0, 107, 0, 21)
         TabTitle.Font = Enum.Font.Gotham
-        TabTitle.Text = text
+        TabTitle.Text = tabName
         TabTitle.TextColor3 = Color3.fromRGB(150, 150, 150)
         TabTitle.TextSize = 14.000
         TabTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -349,7 +415,7 @@ function lib:Window(text, preset, closebind)
 
         coroutine.wrap(
             function()
-                while wait() do
+                while task.wait() do
                     TabBtnIndicator.BackgroundColor3 = PresetColor
                 end
             end
@@ -384,13 +450,13 @@ function lib:Window(text, preset, closebind)
 
         TabBtn.MouseButton1Click:Connect(
             function()
-                for i, v in next, TabFolder:GetChildren() do
+                for i,v in next, TabFolder:GetChildren() do
                     if v.Name == "Tab" then
                         v.Visible = false
                     end
                     Tab.Visible = true
                 end
-                for i, v in next, TabHold:GetChildren() do
+                for i,v in next, TabHold:GetChildren() do
                     if v.Name == "TabBtn" then
                         v.TabBtnIndicator:TweenSize(
                             UDim2.new(0, 0, 0, 2),
@@ -420,7 +486,7 @@ function lib:Window(text, preset, closebind)
                 end
             end
         )
-        local tabcontent = {}
+        local tabcontent = {Name = tabName}
         function tabcontent:Button(text, callback)
             local Button = Instance.new("TextButton")
             local ButtonCorner = Instance.new("UICorner")
@@ -474,13 +540,20 @@ function lib:Window(text, preset, closebind)
 
             Button.MouseButton1Click:Connect(
                 function()
-                    pcall(callback)
+                    callback()
                 end
             )
 
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
         end
-        function tabcontent:Toggle(text,default, callback)
+
+        function tabcontent.CreateButton(tab, args)
+            local name = args.Name
+            local callback = args.Function
+            return tab:Button(name, callback)
+        end
+
+        function tabcontent:Toggle(text, default, callback)
             local toggled = false
 
             local Toggle = Instance.new("TextButton")
@@ -560,85 +633,85 @@ function lib:Window(text, preset, closebind)
 
             coroutine.wrap(
                 function()
-                    while wait() do
+                    while task.wait() do
                         FrameToggle3.BackgroundColor3 = PresetColor
                     end
                 end
             )()
 
-            Toggle.MouseButton1Click:Connect(
-                function()
-                    if toggled == false then
-                        TweenService:Create(
-                            Toggle,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundColor3 = Color3.fromRGB(37, 37, 37)}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggle1,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundTransparency = 1}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggle2,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundTransparency = 1}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggle3,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundTransparency = 0}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggleCircle,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}
-                        ):Play()
-                        FrameToggleCircle:TweenPosition(
-                            UDim2.new(0.587, 0, 0.222000003, 0),
-                            Enum.EasingDirection.Out,
-                            Enum.EasingStyle.Quart,
-                            .2,
-                            true
-                        )
-                    else
-                        TweenService:Create(
-                            Toggle,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundColor3 = Color3.fromRGB(34, 34, 34)}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggle1,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundTransparency = 0}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggle2,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundTransparency = 0}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggle3,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundTransparency = 1}
-                        ):Play()
-                        TweenService:Create(
-                            FrameToggleCircle,
-                            TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                            {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}
-                        ):Play()
-                        FrameToggleCircle:TweenPosition(
-                            UDim2.new(0.127000004, 0, 0.222000003, 0),
-                            Enum.EasingDirection.Out,
-                            Enum.EasingStyle.Quart,
-                            .2,
-                            true
-                        )
-                    end
-                    toggled = not toggled
-                    pcall(callback, toggled)
+            local function toggle()
+                if toggled == false then
+                    TweenService:Create(
+                        Toggle,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundColor3 = Color3.fromRGB(37, 37, 37)}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggle1,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundTransparency = 1}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggle2,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundTransparency = 1}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggle3,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundTransparency = 0}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggleCircle,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}
+                    ):Play()
+                    FrameToggleCircle:TweenPosition(
+                        UDim2.new(0.587, 0, 0.222000003, 0),
+                        Enum.EasingDirection.Out,
+                        Enum.EasingStyle.Quart,
+                        .2,
+                        true
+                    )
+                else
+                    TweenService:Create(
+                        Toggle,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundColor3 = Color3.fromRGB(34, 34, 34)}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggle1,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundTransparency = 0}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggle2,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundTransparency = 0}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggle3,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundTransparency = 1}
+                    ):Play()
+                    TweenService:Create(
+                        FrameToggleCircle,
+                        TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                        {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}
+                    ):Play()
+                    FrameToggleCircle:TweenPosition(
+                        UDim2.new(0.127000004, 0, 0.222000003, 0),
+                        Enum.EasingDirection.Out,
+                        Enum.EasingStyle.Quart,
+                        .2,
+                        true
+                    )
                 end
-            )
+                toggled = not toggled
+                callback(toggled)
+            end
+
+            Toggle.MouseButton1Click:Connect(toggle)
 
             if default == true then
                 TweenService:Create(
@@ -676,14 +749,30 @@ function lib:Window(text, preset, closebind)
                 toggled = not toggled
             end
 
+            local function isToggled()
+                return toggled
+            end
+
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
+            mods[text.."Toggle"] = {
+                Name = text,
+                Type = "Toggle",
+                Obj = {
+                    toggle = toggle,
+                    isToggled = isToggled
+                }
+            }
+            return {
+                toggle = toggle,
+                isToggled = isToggled
+            }
         end
 
         function tabcontent.CreateOptionsButton(tab, args)
             local name = args.Name
             local func = args.Function
             local default = args.Default
-            tab:Toggle(name, (default or false), func)
+            return tab:Toggle(name, (default or false), func)
         end
 
         function tabcontent:Slider(text, min, max, start, callback)
@@ -759,7 +848,7 @@ function lib:Window(text, preset, closebind)
 
             coroutine.wrap(
                 function()
-                    while wait() do
+                    while task.wait() do
                         CurrentValueFrame.BackgroundColor3 = PresetColor
                         SlideCircle.ImageColor3 = PresetColor
                     end
@@ -785,8 +874,18 @@ function lib:Window(text, preset, closebind)
                 SlideCircle:TweenPosition(pos, "Out", "Sine", 0.1, true)
                 local value = math.floor(((pos.X.Scale * max) / max) * (max - min) + min)
                 SliderValue.Text = tostring(value)
-                pcall(callback, value)
+                callback(value)
             end
+
+            local function moveByValue(value)
+                local pos = UDim2.new(math.clamp((value / max), 0.02, 0.97), -6, -1.30499995, 0)
+                local pos1 = UDim2.new(math.clamp((value / max), 0.02, 0.97), 0, 0, 3)
+                CurrentValueFrame:TweenSize(pos1, "Out", "Sine", 0.1, true)
+                SlideCircle:TweenPosition(pos, "Out", "Sine", 0.1, true)
+                SliderValue.Text = tostring(value)
+                callback(value)
+            end
+
             SlideCircle.InputBegan:Connect(
                 function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -809,6 +908,19 @@ function lib:Window(text, preset, closebind)
                 end
             )
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
+
+            mods[text.."Slider"] = {
+                Name = text,
+                Type = "Slider",
+                Obj = {
+                    setValue = moveByValue,
+                    getValue = function() return tonumber(SliderValue.Text) end
+                }
+            }
+            return {
+                setValue = moveByValue,
+                getValue = function() return tonumber(SliderValue.Text) end
+            }
         end
 
         function tabcontent.CreateSlider(tab, args)
@@ -817,11 +929,12 @@ function lib:Window(text, preset, closebind)
             local max = args.Max
             local default = (args.Default or max)
             local func = args.Function
-            tab:Slider(name, min, max, default, func)
+            return tab:Slider(name, min, max, default, func)
         end
 
         function tabcontent:Dropdown(text, list, callback)
             local droptog = false
+            local selected = ""
             local framesize = 0
             local itemcount = 0
 
@@ -904,7 +1017,7 @@ function lib:Window(text, preset, closebind)
                             TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                             {Rotation = 270}
                         ):Play()
-                        wait(.2)
+                        task.wait(.2)
                         Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
                     else
                         Dropdown:TweenSize(
@@ -919,14 +1032,14 @@ function lib:Window(text, preset, closebind)
                             TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                             {Rotation = 0}
                         ):Play()
-                        wait(.2)
+                        task.wait(.2)
                         Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
                     end
                     droptog = not droptog
                 end
             )
 
-            for i, v in next, list do
+            for _,v in next, list do
                 itemcount = itemcount + 1
                 if itemcount <= 3 then
                     framesize = framesize + 26
@@ -973,8 +1086,9 @@ function lib:Window(text, preset, closebind)
                 Item.MouseButton1Click:Connect(
                     function()
                         droptog = not droptog
+                        selected = v
                         DropdownTitle.Text = text .. " - " .. v
-                        pcall(callback, v)
+                        callback(v)
                         Dropdown:TweenSize(
                             UDim2.new(0, 363, 0, 42),
                             Enum.EasingDirection.Out,
@@ -987,7 +1101,7 @@ function lib:Window(text, preset, closebind)
                             TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                             {Rotation = 0}
                         ):Play()
-                        wait(.2)
+                        task.wait(.2)
                         Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
                     end
                 )
@@ -995,7 +1109,44 @@ function lib:Window(text, preset, closebind)
                 DropItemHolder.CanvasSize = UDim2.new(0, 0, 0, DropLayout.AbsoluteContentSize.Y)
             end
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
+
+            local function setValue(val)
+                local newVal = table.find(list, val)
+                if newVal then
+                    selected = val
+                    DropdownTitle.Text = text.." - "..val
+                    callback(val)
+                else
+                    error("Item not found in List!")
+                end
+            end
+
+            local function getValue()
+                return selected
+            end
+
+            mods[text.."Dropdown"] = {
+                Name = text,
+                Type = "Dropdown",
+                Obj = {
+                    setValue = setValue,
+                    getValue = getValue
+                }
+            }
+
+            return {
+                setValue = setValue,
+                getValue = getValue
+            }
         end
+
+        function tabcontent.CreateDropdown(tab, args)
+            local name = args.Name
+            local list = args.List
+            local callback = args.Function
+            return tab:Dropdown(name, list, callback)
+        end
+
         function tabcontent:Colorpicker(text, preset, callback)
             local ColorPickerToggled = false
             local OldToggleColor = Color3.fromRGB(0, 0, 0)
@@ -1226,7 +1377,7 @@ function lib:Window(text, preset, closebind)
 
             coroutine.wrap(
                 function()
-                    while wait() do
+                    while task.wait() do
                         FrameRainbowToggle3.BackgroundColor3 = PresetColor
                     end
                 end
@@ -1244,7 +1395,7 @@ function lib:Window(text, preset, closebind)
                             .2,
                             true
                         )
-                        wait(.2)
+                        task.wait(.2)
                         Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
                     else
                         ColorSelection.Visible = false
@@ -1256,7 +1407,7 @@ function lib:Window(text, preset, closebind)
                             .2,
                             true
                         )
-                        wait(.2)
+                        task.wait(.2)
                         Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
                     end
                     ColorPickerToggled = not ColorPickerToggled
@@ -1267,7 +1418,7 @@ function lib:Window(text, preset, closebind)
                 BoxColor.BackgroundColor3 = Color3.fromHSV(ColorH, ColorS, ColorV)
                 Color.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
 
-                pcall(callback, BoxColor.BackgroundColor3)
+                callback(BoxColor.BackgroundColor3)
             end
 
             ColorH =
@@ -1284,7 +1435,7 @@ function lib:Window(text, preset, closebind)
 
             BoxColor.BackgroundColor3 = preset
             Color.BackgroundColor3 = preset
-            pcall(callback, BoxColor.BackgroundColor3)
+            callback(BoxColor.BackgroundColor3)
 
             Color.InputBegan:Connect(
                 function(input)
@@ -1419,8 +1570,8 @@ function lib:Window(text, preset, closebind)
                             ColorSelection.Position = UDim2.new(1, 0, 0, 0)
                             HueSelection.Position = UDim2.new(0.48, 0, 0, lib.HueSelectionPosition)
 
-                            pcall(callback, BoxColor.BackgroundColor3)
-                            wait()
+                            callback(BoxColor.BackgroundColor3)
+                            task.wait()
                         end
                     elseif not RainbowColorPicker then
                         TweenService:Create(
@@ -1457,7 +1608,7 @@ function lib:Window(text, preset, closebind)
                         ColorSelection.Position = OldColorSelectionPosition
                         HueSelection.Position = OldHueSelectionPosition
 
-                        pcall(callback, BoxColor.BackgroundColor3)
+                        callback(BoxColor.BackgroundColor3)
                     end
                 end
             )
@@ -1473,7 +1624,7 @@ function lib:Window(text, preset, closebind)
                         .2,
                         true
                     )
-                    wait(.2)
+                    task.wait(.2)
                     Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
                 end
             )
@@ -1511,7 +1662,18 @@ function lib:Window(text, preset, closebind)
             LabelTitle.TextXAlignment = Enum.TextXAlignment.Left
 
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
+
+            return {
+                SetText = function(newtext)
+                    LabelTitle.Text = newtext
+                end
+            }
         end
+
+        function tabcontent.CreateLabel(tab, args)
+            return tab:Label(args.Name)
+        end
+
         function tabcontent:Textbox(text, disapper, callback)
             local Textbox = Instance.new("Frame")
             local TextboxCorner = Instance.new("UICorner")
@@ -1566,7 +1728,7 @@ function lib:Window(text, preset, closebind)
                 function(ep)
                     if ep then
                         if #TextBox.Text > 0 then
-                            pcall(callback, TextBox.Text)
+                            callback(TextBox.Text)
                             if disapper then
                                 TextBox.Text = ""
                             end
@@ -1576,6 +1738,7 @@ function lib:Window(text, preset, closebind)
             )
             Tab.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
         end
+
         function tabcontent:Bind(text, keypreset, callback)
             local binding = false
             local Key = keypreset.Name
@@ -1643,7 +1806,7 @@ function lib:Window(text, preset, closebind)
                 function(current, pressed)
                     if not pressed then
                         if current.KeyCode.Name == Key and binding == false then
-                            pcall(callback)
+                            callback()
                         end
                     end
                 end

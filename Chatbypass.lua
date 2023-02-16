@@ -6,7 +6,7 @@ local settings = {
 }
 
 if getgenv().chatmod then
-    for i,v in next, getgenv().chatmod.connections do
+    for _,v in next, getgenv().chatmod.connections do
         v:Disconnect()
     end
 end
@@ -23,7 +23,7 @@ local suc = pcall(function()
 end)
 
 if not suc then
-    Box = game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox
+    Box = game:GetService("CoreGui"):WaitForChild("ExperienceChat"):WaitForChild("appLayout"):WaitForChild("chatInputBar"):WaitForChild("Background"):WaitForChild("Container"):WaitForChild("TextContainer"):WaitForChild("TextBoxContainer"):WaitForChild("TextBox")
     newChat = true
 end
 
@@ -89,7 +89,7 @@ local function sendMessage(content)
     if (newChat) then
         return game.TextChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(content)
     else
-        return sendMessage(content)
+        return game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(content, "All")
     end
 end
 
@@ -131,7 +131,7 @@ local bypasses = {
     ["shit"] = bypass("shit"),
     ["cotton"] = bypass("cotton"),
     ["cock"] = bypass("cock"),
-    ["ass"] = bypass("cock"),
+    ["ass"] = bypass("ass"),
     ["tit"] = bypass("tit"),
     ["tits"] = bypass("tits"),
     ["wtf"] = bypass("wtf"),
@@ -139,41 +139,69 @@ local bypasses = {
     ["trollage"] = bypass("trollage"),
 }
 
-if settings.mode == 2 then --credits for this method: https://github.com/AnthonyIsntHere
+if settings.mode == 2 then
     bypasses = {
-        ["ass"] = "as{{aieixzvzx:s}}",
-        ["fucking"] = bypass(" fuck ing"),
-        ["asshole"] = "as{{aieixzvzx:shole}}",
-        ["bitch"] = "bit{{aieixzvzx:ch}}",
-        ["cock"] = "co{{aieixzvzx:ck}}",
-        ["cunt"] = "cu{{aieixzvzx:nt}}",
-        ["dick"] = "di{{zczxczvz:ck}}",
-        ["dyke"] = "dy{{aieixzvzx:ke}}",
-        ["faggot"] = "fa{{aieixzvzx:ggot}}",
-        ["fuck"] = "fu{{aieixzvzx:ck}}",
-        ["gaylord"] = "gayl{{aieixzvzx:ord}}",
-        ["kike"] = "ki{{aieixzvzx:ke}}",
-        ["motherfucker"] = "motherf{{aieixzvzx:ucker}}",
-        ["nigga"] = "ni{{aieixzvzx:gga}}",
-        ["nigger"] = "ni{{aieixzvzx:gger}}",
-        ["piss"] = "p{{aieixzvzx:iss}}",
-        ["penis"] = "pe{{aieixzvzx:nis}}",
-        ["pussy"] = "pu{{aieixzvzx:ssy}}",
-        ["shit"] = "sh{{aieixzvzx:it}}",
-        ["slut"] = "sl{{aieixzvzx:ut}}",
-        ["whore"] = "who{{aieixzvzx:re}}",
-        ["discord"] = "disco{{aieixzvzx:rd}}",
-        ["kys"] = "k{{aieixzvzx:ys}}",
-        ["kill"] = "ki{{aieixzvzx:ll}}",
-        ["vape"] = "va{{aieixzvzx:pe}}",
-        ["lmfao"] = "lmf{{aieixzvzx:ao}}",
-        ["lmao"] = "lmf{{aieixzvzx:ao}}",
-        ["pick cotton"] = "pi{{aieixzvzx:ck}} cotton",
-        ["hitler"] = "hi{{aieixzvzx:tler}}",
-        ["stfu"] = "st{{aieixzvzx:fu}}",
-        ["trollage"] = "trolla ge",
-        ["wtf"] = "wt{{aieixzvzx:f}}",
-        ["retard"] = "ret{{aieixzvzx:ard}}"
+        hate = bypass("hate"),
+        asshole = "аѕѕһоlе",
+        ass = "а⁥⁥⁥⁥ѕѕ",
+        ["anal sex"] = "а⁥⁥⁥⁥n⁥⁥⁥⁥а⁥⁥⁥⁥l⁥⁥⁥⁥ ѕ⁥⁥⁥⁥е⁥⁥⁥⁥х",
+        boobs = "Вoobs",
+        blowjob = "Вӏоwjob",
+        ["https://blacked.com"] = "h⁥⁥⁥⁥t⁥⁥⁥⁥t⁥⁥⁥⁥р⁥⁥⁥⁥ѕ⁥⁥⁥⁥:⁥⁥⁥⁥/⁥⁥⁥⁥/⁥⁥⁥⁥b⁥⁥⁥⁥l⁥⁥⁥⁥а⁥⁥⁥⁥с⁥⁥⁥⁥k⁥⁥⁥⁥е⁥⁥⁥⁥d⁥⁥⁥⁥.⁥⁥⁥с⁥⁥⁥⁥о⁥⁥⁥⁥m⁥⁥⁥⁥",
+        ["Boom, cockshot!"] = "В⁥⁥⁥⁥о⁥⁥⁥⁥о⁥⁥⁥⁥m⁥⁥⁥⁥ с⁥⁥⁥⁥о⁥⁥⁥⁥с⁥⁥⁥⁥k⁥⁥⁥⁥ѕ⁥⁥⁥⁥h⁥⁥⁥⁥о⁥⁥⁥⁥t⁥⁥⁥⁥!⁥⁥⁥⁥",
+        ["Bites your cock"] = "Віtеѕ уоur сосk",
+        bbc = "big black со⁥⁥⁥сk",
+        cocaine = "сосaine",
+        cock = "сосk",
+        cocksucker = "сосk suсkеr",
+        cum = "с⁥⁥⁥⁥um",
+        fatasshoe = "f⁥аt а⁥ѕѕ һое",
+        fatass = "f⁥аt а⁥ѕѕ һое",
+        hoe = "һое",
+        ["hardcode sex"] = "h⁥⁥⁥⁥а⁥⁥⁥⁥r⁥⁥⁥⁥d⁥⁥⁥⁥с⁥⁥⁥⁥о⁥⁥⁥⁥r⁥⁥⁥⁥е⁥⁥⁥⁥ ѕ⁥⁥⁥⁥е⁥⁥⁥⁥х⁥⁥⁥⁥",
+        hardcode = "h⁥⁥⁥⁥а⁥⁥⁥⁥r⁥⁥⁥⁥d⁥⁥⁥⁥с⁥⁥⁥⁥о⁥⁥⁥⁥r⁥⁥⁥⁥е⁥⁥⁥",
+        ["https://pornhub.com"] = "h⁥⁥⁥⁥t⁥⁥⁥⁥t⁥⁥⁥⁥р⁥⁥⁥⁥ѕ⁥⁥⁥⁥:⁥⁥⁥⁥/⁥⁥⁥⁥/⁥⁥⁥⁥р⁥⁥⁥⁥о⁥⁥⁥⁥r⁥⁥⁥⁥n⁥⁥⁥⁥h⁥⁥⁥⁥u⁥⁥⁥⁥b⁥⁥⁥⁥.⁥⁥⁥с⁥⁥⁥⁥о⁥⁥⁥⁥m⁥⁥⁥⁥",
+        rape = "rаре",
+        sex = "ѕ⁥⁥⁥⁥е⁥⁥⁥⁥х",
+        titties = "Тitties",
+        weed = "w⁥⁥⁥⁥е⁥⁥⁥⁥е⁥⁥⁥⁥d⁥⁥⁥⁥",
+        BOOBS = "ВOOBS",
+        bitch = "ВI⁥⁥⁥⁥⁥⁥TСН",
+        ["big boobs"] = "ВIG ВООВS",
+        bitches = "ВIT⁥⁥⁥⁥⁥⁥⁥СНEЅ",
+        CUM = "СUМ",
+        cunt = "СU⁥⁥⁥NТ",
+        COCK = "СОCK",
+        dumbass = "DU⁥МВ А⁥ЅЅ",
+        hentai = "НЕΝТАӀ",
+        masturbate = "МАЅТURВАТЕ",
+        pussy = "РUЅЅҮ",
+        piss = "РӀЅЅ",
+        PENIS = "РЕNIS",
+        RAPE = "RАРЕ",
+        shit = "ЅНIТ",
+        TITTIES = "ТITTIЕS",
+        thot = "ТН⁥⁥⁥⁥⁥ОТ",
+        xxx = "ΧΧΧ",
+        cut = "сut",
+        yourself = "yоur⁥sеlf",
+        smd = "ѕ⁥⁥⁥⁥u⁥⁥⁥⁥с⁥⁥⁥⁥k⁥⁥⁥⁥ m⁥⁥⁥⁥у⁥⁥⁥⁥ с⁥⁥⁥⁥о⁥⁥⁥⁥с⁥⁥⁥⁥k⁥⁥⁥⁥ r⁥⁥⁥⁥е⁥⁥⁥⁥t⁥⁥⁥⁥а⁥⁥⁥⁥r⁥⁥⁥d⁥",
+        stfu = "Ѕ⁥⁥⁥⁥Н⁥⁥⁥⁥U⁥⁥⁥⁥Т⁥⁥⁥⁥ U⁥⁥⁥⁥Р⁥⁥⁥⁥ F⁥⁥⁥⁥ А⁥⁥⁥⁥ G⁥⁥⁥⁥ G⁥⁥⁥⁥ О⁥⁥⁥⁥ Т",
+        bouttacum = "І⁥⁥⁥⁥ А⁥⁥⁥⁥М⁥⁥⁥⁥ А⁥⁥⁥⁥В⁥⁥⁥⁥О⁥⁥⁥⁥U⁥⁥⁥⁥Т⁥⁥⁥⁥ Т⁥⁥⁥⁥О⁥⁥⁥⁥ С⁥⁥⁥⁥U⁥⁥⁥⁥М⁥⁥⁥⁥",
+        imhorny = "IМ SО НОRNY",
+        fuck = "Fuくk",
+        faggot = "f⁥⁥⁥⁥ а⁥⁥⁥⁥ g⁥⁥⁥⁥ g⁥⁥⁥⁥ о⁥⁥⁥⁥ t⁥⁥",
+        nigga = "п⁥iɡ⁥ɡ⁥а",
+        nigger = "niġġer",
+        porn = "рогn",
+        penis = "реп⁥is",
+        kys = "К⁥⁥⁥⁥⁥YЅ",
+        youbitch = "ҮＯU ЫтСН ������",
+        kysbitch = "К⁥⁥⁥⁥⁥YЅ ВI⁥⁥⁥⁥⁥⁥TСН",
+        kkk = "ккк",
+        fuckme = "FU⁥СКМ⁥Е",
+        iloveboobs = "ilovebо⁥оbѕ",
+        bouncyboobs = "bouncyboobs",
     }
 end
 
@@ -225,12 +253,6 @@ getgenv().chatmod.connections[#getgenv().chatmod.connections+1] = Box.FocusLost:
             Box.Text = 'To Chat click here or press "/" key'
             return
         end
---[[         if Box.Text:lower():find("fuck you") then
-            newtext = Box.Text:gsub("fuck you", bypasses.fuckyou)
-            sendMessage(newtext)
-            Box.Text = 'To Chat click here or press "/" key'
-            return
-        end ]]
         local split = {}
         local newstr = Box.Text
         if settings.mode == 1 then
@@ -243,9 +265,6 @@ getgenv().chatmod.connections[#getgenv().chatmod.connections+1] = Box.FocusLost:
                 end
             end
         elseif settings.mode == 2 then
-            if newstr:find("fucking") then
-                newstr = newstr:gsub("fucking", bypasses.fucking)
-            end
             for i,v in next, bypasses do
                 newstr = newstr:gsub(i,v)
             end

@@ -113,17 +113,17 @@ local function bypass(word)
 end
 
 local bypasses = {
-    ["fuck"] = bypass("fu ck"),
+    ["fuck"] = bypass("fuck"),
     ["fucking"] = bypass(" fuck ing"),
-    ["fucked"] = bypass(" fucked"),
-    ["nigger"] = bypass(" nigger"),
-    ["nigga"] = bypass(" nigga"),
-    ["niggas"] = bypass(" niggas"),
+    ["fucked"] = bypass("fucked"),
+    ["nigger"] = bypass("nigger"),
+    ["nigga"] = bypass("nigga"),
+    ["niggas"] = bypass("niggas"),
     ["niggers"] = bypass(" niggers"),
-    ["vape"] = bypass(" va pe"),
-    ["discord"] = bypass(" discord"),
-    ["kys"] = bypass(" kys"),
-    ["faggot"] = bypass(" faggot"),
+    ["vape"] = bypass("vape"),
+    ["discord"] = bypass("discord"),
+    ["kys"] = bypass("kys"),
+    ["faggot"] = bypass("faggot"),
     ["lmfao"] = bypass("lmfao"),
     ["LMFAO"] = bypass("lmfao"),
     ["lmao"] = bypass("lmao"),
@@ -133,11 +133,15 @@ local bypasses = {
     ["cock"] = bypass("cock"),
     ["ass"] = bypass("ass"),
     ["tit"] = bypass("tit"),
-    ["tits"] = bypass("tits"),
+    ["titts"] = bypass("tits"),
     ["wtf"] = bypass("wtf"),
     ["WTF"] = bypass("wtf"),
     ["trollage"] = bypass("trollage"),
 }
+
+for i,v in next, bypasses do
+    bypasses[i] = "("..v..")"
+end
 
 if settings.mode == 2 then
     bypasses = {
@@ -267,9 +271,6 @@ getgenv().chatmod.connections[#getgenv().chatmod.connections+1] = Box.FocusLost:
         elseif settings.mode == 2 then
             for i,v in next, bypasses do
                 newstr = newstr:gsub(i,v)
-            end
-            if newstr:find("{{") then
-                newstr = newstr.." fn"
             end
         end
         if Box.Text:find(";kick default") then
